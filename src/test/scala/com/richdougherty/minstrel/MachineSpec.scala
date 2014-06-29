@@ -11,7 +11,7 @@ class MachineSpec extends UnitSpec {
     def createMachine(addDirectives: AssemblyBuilder => Unit): Machine = {
       val assemblyBuilder = new AssemblyBuilder()
       import assemblyBuilder._
-      initStandard(32, 32)
+      StandardHeader.build(assemblyBuilder, 32, 32)
       label("main")
       addDirectives(assemblyBuilder)
       val assembled = Assembler.assemble(assemblyBuilder.directives)

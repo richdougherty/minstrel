@@ -71,10 +71,10 @@ class AssemblerSpec extends UnitSpec {
     }
     "start exec at main" in {
       val assemblyBuilder = new AssemblyBuilder()
-      import assemblyBuilder._
-      initStandard(4, 4)
-      label("main")
-      val mem = new Memory(Assembler.assemble(directives))
+      StandardHeader.build(assemblyBuilder, 4, 4)
+      assemblyBuilder.label("main")
+      val assembly = assemblyBuilder.directives
+      val mem = new Memory(Assembler.assemble(assembly))
       val machine = new Machine(mem)
       machine.exec.min.get should be (24)
       machine.exec.max.get should be (56)

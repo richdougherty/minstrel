@@ -10,35 +10,11 @@ class AssemblyBuilder {
   def directives: Seq[Directive] = buffer
   private val buffer = new ArrayBuffer[Directive]
 
-  def initStandard(execStackSize: Int, dataStackSize: Int): Unit = {
-    label("exec_top_addr")
-    labelRef("exec_top_init")
-    label("exec_min_addr")
-    labelRef("exec_min")
-    label("exec_max_addr")
-    labelRef("exec_max")
-
-    label("data_top_addr")
-    labelRef("data_top_init")
-    label("data_min_addr")
-    labelRef("data_min")
-    label("data_max_addr")
-    labelRef("data_max")
-
-    label("exec_min")
-    labelRef("main", size=F64Size)
-    label("exec_top_init")
-    pad(execStackSize-1, size=F64Size)
-    label("exec_max")
-
-    label("data_min")
-    label("data_top_init")
-    pad(dataStackSize, size=F64Size)
-    label("data_max")
-  }
-
   def append(d: Directive): Unit = {
     buffer += d
+  }
+  def appendAll(ds: Seq[Directive]): Unit = {
+    buffer ++= ds
   }
 
   def label(name: String) = append(Label(name))
