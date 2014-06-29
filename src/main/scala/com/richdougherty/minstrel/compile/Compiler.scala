@@ -9,20 +9,18 @@ object Compiler {
     val builder = new AssemblyBuilder
     val workStack = new mutable.Stack[Def]
     workStack.pushAll(program.defs.reverse)
-    val dictionary = mutable.Map.empty[String, Seq[Directive]]
-    dictionary ++= StandardImmediates.dictionary
+    val dictionary = StandardImmediates.dictionary
 
     while (workStack.nonEmpty) {
       val df = workStack.pop()
       builder.label(df.name)
-      dictionary += (df.name -> Seq(
-        OpCode(Op.Push),
-        LabelRef(F64Size, "name"),
-        OpCode(Op.Call)
-      ))
       for (ast <- df.body) ast match {
         case Word(name) =>
-          val wordDirectives = dictionary.getOrElse(name, sys.error(s"word $name not defined"))
+          val wordDirectives = dictionary.getOrElse(name, Seq(
+            OpCode(Op.Push),
+            LabelRef(F64Size, name),
+            OpCode(Op.Call)
+          ))
           builder.appendAll(wordDirectives)
         case Num(value) =>
           builder.push(value)

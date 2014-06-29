@@ -29,7 +29,16 @@ object MachineOp {
     }
   }
   val Jmp = unimplemented("jmp")
-  val Call = unimplemented("call")
+  object Call extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      val retAddr = exec.pop() + 4
+      exec.push(retAddr)
+      val callAddr = data.pop()
+      exec.push(callAddr)
+      1
+    }
+  }
   val Neg = unimplemented("neg")
   val Bnot = unimplemented("bnot")
   val Not = unimplemented("not")

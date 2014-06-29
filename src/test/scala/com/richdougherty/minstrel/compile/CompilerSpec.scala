@@ -42,5 +42,11 @@ class CompilerSpec extends UnitSpec {
         Def("main", Num(13), Num(5), Word("%"))
       )) should be (3d)
     }
+    "call words" in {
+      result(Program(
+        Def("main", Word("subroutine")),
+        Def("subroutine", Num(12))
+      )) should be (12d)
+    }
   }
 }
