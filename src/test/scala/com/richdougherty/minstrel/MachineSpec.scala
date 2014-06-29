@@ -1,5 +1,6 @@
 package com.richdougherty.minstrel
 
+import com.richdougherty.minstrel.assemble._
 import org.scalatest._
 
 class MachineSpec extends UnitSpec {
@@ -7,20 +8,24 @@ class MachineSpec extends UnitSpec {
   import Conversion._
 
   "Machines" should {
-    def createMachine: Machine = {
-      val assembler = new assemble.Assembler()
-      import assembler._
-      initStandard(8, 8)
+    def createMachine(addDirectives: AssemblyBuilder => Unit): Machine = {
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
+      initStandard(32, 32)
       label("main")
-      push(123d)
-      push(456d)
-      add()
-      ret()
-      new Machine(new Memory(assemble))
+      addDirectives(assemblyBuilder)
+      val assembled = Assembler.assemble(assemblyBuilder.directives)
+      new Machine(new Memory(assembled))
     }
 
     "add numbers" in {
-      val machine = createMachine
+      val machine = createMachine { assembler =>
+        import assembler._
+        push(123d)
+        push(456d)
+        add()
+        ret()
+      }
       machine.step should be (1)
       machine.data.get should be (123d)
       machine.step should be (1)

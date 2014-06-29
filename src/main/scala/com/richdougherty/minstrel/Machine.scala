@@ -1,6 +1,8 @@
 package com.richdougherty.minstrel
 
-class Machine(val mem: Memory) {
+import scala.annotation.tailrec
+
+final class Machine(val mem: Memory) {
   def this(memSize: Int) = this(new Memory(memSize))
 
   import Machine._
@@ -39,6 +41,15 @@ class Machine(val mem: Memory) {
         case _ => sys.error(s"$op not implemented yet")
       }
     }
+  }
+
+  def run(): Int = {
+    @tailrec
+    def run0(cyclesSoFar: Int): Int = {
+      val cycles = step()
+      if (cycles == 0) cyclesSoFar else run0(cycles + cyclesSoFar)
+    }
+    run0(0)
   }
 }
 

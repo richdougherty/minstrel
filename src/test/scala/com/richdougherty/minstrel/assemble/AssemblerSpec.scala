@@ -21,60 +21,60 @@ class AssemblerSpec extends UnitSpec {
 
   "Assemblers" should {
     "know the size of i8 literals" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       i8(1)
-      calculateSize should be (1)
+      Assembler.calculateSize(directives) should be (1)
     }
     "assemble i8 literals" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       i8(1)
-      assemble.toHex should be ("01")
+      Assembler.assemble(directives).toHex should be ("01")
     }
     "know the size of i32 literals" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       i32(0x1234567)
-      calculateSize should be (4)
+      Assembler.calculateSize(directives) should be (4)
     }
     "assemble i32 literals" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       i32(0x1234567)
-      assemble.toHex should be ("01234567")
+      Assembler.assemble(directives).toHex should be ("01234567")
     }
     "know the size of f64 literals" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       f64(Math.PI)
-      calculateSize should be (8)
+      Assembler.calculateSize(directives) should be (8)
     }
     "assemble f64 literals" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       f64(Math.PI)
-      assemble.toHex should be ("400921fb54442d18")
+      Assembler.assemble(directives).toHex should be ("400921fb54442d18")
     }
     "assemble labels" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       labelRef("x")
       label("x")
-      assemble.toHex should be ("00000004")
+      Assembler.assemble(directives).toHex should be ("00000004")
     }
     "assemble push" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       push(123)
-      assemble.toHex should be (i32ToBytes(Op.Push.code).toHex ++ f64ToBytes(123).toHex)
+      Assembler.assemble(directives).toHex should be (i32ToBytes(Op.Push.code).toHex ++ f64ToBytes(123).toHex)
     }
     "start exec at main" in {
-      val assembler = new Assembler()
-      import assembler._
+      val assemblyBuilder = new AssemblyBuilder()
+      import assemblyBuilder._
       initStandard(4, 4)
       label("main")
-      val mem = new Memory(assemble)
+      val mem = new Memory(Assembler.assemble(directives))
       val machine = new Machine(mem)
       machine.exec.min.get should be (24)
       machine.exec.max.get should be (56)
