@@ -24,7 +24,6 @@ object Compiler {
         case Word(name) =>
           val wordDirectives = dictionary.getOrElse(name, sys.error(s"word $name not defined"))
           builder.appendAll(wordDirectives)
-          println(wordDirectives)
         case Num(value) =>
           builder.push(value)
         case Quot(body) => ???

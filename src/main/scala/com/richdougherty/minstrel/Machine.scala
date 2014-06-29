@@ -13,33 +13,9 @@ final class Machine(val mem: Memory) {
     if (exec.isEmpty) 0 else {
       val pc: Int = exec.get.toInt
       val opCode: Int = mem.i32Load(pc).toInt
-      val op: Op = Op.byCode.get(opCode).getOrElse(sys.error(s"Unknown opCode $opCode at $pc"))
-      op match {
-        case Op.Halt => {
-          sys.error(s"Encountered halt instruction at $pc")
-        }
-        case Op.Push => {
-          val pc: Int = exec.pop().toInt
-          val value: Double = mem.f64Load(pc + 4)
-          data.push(value)
-          exec.push(pc + 12)
-          1
-        }
-        case Op.Add => {
-          val pc: Int = exec.pop().toInt
-          val b = data.pop()
-          val a = data.pop()
-          val c = a + b
-          data.push(c)
-          exec.push(pc + 4)
-          1
-        }
-        case Op.Ret => {
-          exec.pop()
-          1
-        }
-        case _ => sys.error(s"$op not implemented yet")
-      }
+      val op: Op = Op.byCode.getOrElse(opCode, sys.error(s"Unknown opCode $opCode at $pc"))
+      val machineOp: MachineOp = MachineOp.byOp.getOrElse(op, sys.error(s"No MachineOp for $op"))
+      machineOp.step(this)
     }
   }
 
