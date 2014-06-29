@@ -1,8 +1,9 @@
 package com.richdougherty.minstrel
 
-class Machine(memSize: Int) {
+class Machine(val mem: Memory) {
+  def this(memSize: Int) = this(new Memory(memSize))
+
   import Machine._
-  val mem = new Memory(memSize)
   val exec = new Stack(mem, ExecAddr)
   val data = new Stack(mem, DataAddr)
 
@@ -12,13 +13,18 @@ class Machine(memSize: Int) {
       val opCode: Int = mem.i32Load(pc).toInt
       val op: Op = Op.byCode.get(opCode).getOrElse(sys.error(s"Unknown opCode $opCode at $pc"))
       op match {
+        case Op.Halt => {
+          sys.error(s"Encountered halt instruction at $pc")
+        }
         case Op.Push => {
+          val pc: Int = exec.pop().toInt
           val value: Double = mem.f64Load(pc + 4)
           data.push(value)
           exec.push(pc + 12)
           1
         }
         case Op.Add => {
+          val pc: Int = exec.pop().toInt
           val b = data.pop()
           val a = data.pop()
           val c = a + b
@@ -26,7 +32,11 @@ class Machine(memSize: Int) {
           exec.push(pc + 4)
           1
         }
-        case _ => sys.error(s"Op $opCode not implemented yet")
+        case Op.Ret => {
+          exec.pop()
+          1
+        }
+        case _ => sys.error(s"$op not implemented yet")
       }
     }
   }

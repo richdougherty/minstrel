@@ -8,25 +8,15 @@ class MachineSpec extends UnitSpec {
 
   "Machines" should {
     def createMachine: Machine = {
-      val machine = new Machine(256)
-
-      var free = 24
-      def alloc(size: Int): Int = {
-        val addr = free
-        free += size
-        addr
-      }
-
-      machine.exec.init(alloc(64), 64)
-      machine.data.init(alloc(64), 64)
-
-      machine.exec.push(free)
-      machine.mem.i32Store(alloc(4), Op.Push.code)
-      machine.mem.f64Store(alloc(8), 123d)
-      machine.mem.i32Store(alloc(4), Op.Push.code)
-      machine.mem.f64Store(alloc(8), 456d)
-      machine.mem.i32Store(alloc(4), Op.Add.code)
-      machine
+      val assembler = new assemble.Assembler()
+      import assembler._
+      initStandard(8, 8)
+      label("main")
+      push(123d)
+      push(456d)
+      add()
+      ret()
+      new Machine(new Memory(assemble))
     }
 
     "add numbers" in {
@@ -37,6 +27,8 @@ class MachineSpec extends UnitSpec {
       machine.data.get should be (456d)
       machine.step should be (1)
       machine.data.get should be (579d)
+      machine.step should be (1)
+      machine.step should be (0)
     }
   }
 }

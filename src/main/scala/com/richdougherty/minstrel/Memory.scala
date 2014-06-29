@@ -2,9 +2,11 @@ package com.richdougherty.minstrel
 
 import Conversion._
 
-class Memory(memSize: Int) {
+class Memory(raw: Array[Byte]) {
+  def this(memSize: Int) = this(new Array[Byte](memSize))
 
-  private val raw = new Array[Byte](memSize)
+  def size: Int = raw.length
+
   private val buffer = java.nio.ByteBuffer.wrap(raw)
 
   def u32Load(addr: Int): Double = {

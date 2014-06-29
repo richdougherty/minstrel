@@ -19,7 +19,7 @@ class Stack(mem: Memory, baseAddr: Int) {
   // get the top value
   def get: Double = {
     val addr = top.get - 8
-    if (addr < min.get) sys.error("stack underflow: $addr < ${min.get}")
+    if (addr < min.get) sys.error(s"stack underflow: $addr < ${min.get}")
     mem.f64Load(addr)
   }
   // set the top value
