@@ -15,7 +15,7 @@ class MinstrelSpec extends UnitSpec {
 
     "run 5!" in {
       Minstrel.run("""
-          : factorial
+          : factorial ( n -- n! )
           dup 1 <= [ pop 1 ] [
             dup -1 + factorial *
           ] if

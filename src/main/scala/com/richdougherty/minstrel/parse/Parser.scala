@@ -12,17 +12,37 @@ object Parser {
     final case object DefToken extends Token
     final case object QuotStartToken extends Token
     final case object QuotEndToken extends Token
+    final case object CommentStartToken extends Token
+    final case object CommentEndToken extends Token
     final case class NumToken(value: Double) extends Token
     final case class WordToken(name: String) extends Token
 
-    var tokens = text.split("\\s").map(_.trim).filter(!_.isEmpty).map {
-      case ":" => DefToken
-      case "[" => QuotStartToken
-      case "]" => QuotEndToken
-      case s =>
-        import java.lang.Double.parseDouble
-        try NumToken(parseDouble(s)) catch { case _: NumberFormatException => WordToken(s) }
-    }.to[List]
+    var tokens = {
+      val strings = text.split("\\s").map(_.trim).filter(!_.isEmpty)
+      val rawTokens = strings.map {
+        case ":" => DefToken
+        case "[" => QuotStartToken
+        case "]" => QuotEndToken
+        case "(" => CommentStartToken
+        case ")" => CommentEndToken
+        case s =>
+          import java.lang.Double.parseDouble
+          try NumToken(parseDouble(s)) catch { case _: NumberFormatException => WordToken(s) }
+      }
+      val (_, decommentedTokens) = rawTokens.foldLeft((0, Seq.empty[Token])) {
+        case ((commentDepth, accTokens), CommentStartToken) =>
+          (commentDepth+1, accTokens)
+        case ((0, _), CommentEndToken) =>
+          sys.error("unexpected comment end token")
+        case ((commentDepth, accTokens), CommentEndToken) =>
+          (commentDepth-1, accTokens)
+        case ((0, accTokens), token) =>
+          (0, accTokens :+ token)
+        case ((commentDepth, accTokens), _) =>
+          (commentDepth, accTokens)
+      }
+      decommentedTokens.to[List]
+    }
 
     def required[A](expected: String)(f: PartialFunction[Token,A]): A = tokens match {
       case head::rest if f.isDefinedAt(head) =>

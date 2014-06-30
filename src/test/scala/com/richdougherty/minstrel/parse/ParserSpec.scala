@@ -38,5 +38,15 @@ class ParserSpec extends UnitSpec {
         Def("main", Num(1), Num(2), Word("<"), Quot(Num(-1)), Quot(Num(1)), Word("if"))
       ))
     }
+    "ignore comments" in {
+      Parser.parse(": main ( -- n ) 1 2 +") should be (Program(
+        Def("main", Num(1), Num(2), Word("+"))
+      ))
+    }
+    "ignore nested comments" in {
+      Parser.parse(": main ( ( a b ) -- n ) 1 2 +") should be (Program(
+        Def("main", Num(1), Num(2), Word("+"))
+      ))
+    }
   }
 }
