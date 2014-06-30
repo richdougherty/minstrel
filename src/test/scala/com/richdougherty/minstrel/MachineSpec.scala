@@ -26,14 +26,14 @@ class MachineSpec extends UnitSpec {
         add()
         ret()
       }
-      machine.step should be (1)
+      machine.step() should be (1)
       machine.data.get should be (123d)
-      machine.step should be (1)
+      machine.step() should be (1)
       machine.data.get should be (456d)
-      machine.step should be (1)
+      machine.step() should be (1)
       machine.data.get should be (579d)
-      machine.step should be (1)
-      machine.step should be (0)
+      machine.step() should be (1)
+      machine.step() should be (0)
     }
   }
 }

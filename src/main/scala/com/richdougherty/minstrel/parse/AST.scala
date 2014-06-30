@@ -1,4 +1,4 @@
-package com.richdougherty.minstrel.compile
+package com.richdougherty.minstrel.parse
 
 import scala.collection.immutable
 
@@ -13,6 +13,7 @@ final case class Quot(body: immutable.Seq[AST]) extends AST
 object Quot {
   def apply(asts: AST*): Quot = Quot(immutable.Seq(asts: _*))
 }
+final case class QuotWord(name: String) extends AST
 final case class Num(value: Double) extends AST
 
 final case class Program(defs: immutable.Seq[Def])

@@ -54,6 +54,19 @@ object MachineOp {
       1
     }
   }
+  object If extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      val nextAddr = exec.pop().toInt + 4
+      val f = f64ToI32(data.pop())
+      val t = f64ToI32(data.pop())
+      val cond = f64ToI1(data.pop())
+      val branch = if (cond) t else f
+      exec.push(nextAddr)
+      exec.push(branch)
+      1
+    }
+  }
   val Neg = UnaryMachineOp.f64((a: Double) => -a)
   val Bnot = UnaryMachineOp.i32((a: Int) => ~a)
   val Not = UnaryMachineOp.i1((a: Boolean) => !a)
@@ -102,7 +115,7 @@ object MachineOp {
   private def unimplemented(name: String) = new MachineOp {
     def step(m: Machine): Int = sys.error(s"op $name not implemented")
   }
-  val byOp: Map[Op, MachineOp] = Map(Op.Halt -> Halt, Op.Push -> Push, Op.Pop -> Pop, Op.Dup -> Dup, Op.Rot -> Rot, Op.Ret -> Ret, Op.Jmp -> Jmp, Op.Call -> Call, Op.Neg -> Neg, Op.Bnot -> Bnot, Op.Not -> Not, Op.Add -> Add, Op.Sub -> Sub, Op.Mul -> Mul, Op.Div -> Div, Op.Mod -> Mod, Op.Bor -> Bor, Op.Band -> Band, Op.Bxor -> Bxor, Op.Shl -> Shl, Op.Sshr -> Sshr, Op.Zshr -> Zshr, Op.Lt -> Lt, Op.Lte -> Lte, Op.Gt -> Gt, Op.Gte -> Gte, Op.Eq -> Eq, Op.Ne -> Ne, Op.Acos -> Acos, Op.Atan -> Atan, Op.Cos -> Cos, Op.Sin -> Sin, Op.Tan -> Tan, Op.Ceil -> Ceil, Op.Floor -> Floor, Op.Exp -> Exp, Op.Log -> Log, Op.Sqrt -> Sqrt, Op.Abs -> Abs, Op.Atan2 -> Atan2, Op.Imul -> Imul, Op.U8Store -> U8Store, Op.U8Load -> U8Load, Op.I8Store -> I8Store, Op.I8Load -> I8Load, Op.I16Store -> I16Store, Op.I16Load -> I16Load, Op.I32Store -> I32Store, Op.I32Load -> I32Load, Op.F32Store -> F32Store, Op.F32Load -> F32Load, Op.F64Store -> F64Store, Op.F64Load -> F64Load)
+  val byOp: Map[Op, MachineOp] = Map(Op.Halt -> Halt, Op.Push -> Push, Op.Pop -> Pop, Op.Dup -> Dup, Op.Rot -> Rot, Op.Ret -> Ret, Op.Jmp -> Jmp, Op.Call -> Call, Op.If -> If, Op.Neg -> Neg, Op.Bnot -> Bnot, Op.Not -> Not, Op.Add -> Add, Op.Sub -> Sub, Op.Mul -> Mul, Op.Div -> Div, Op.Mod -> Mod, Op.Bor -> Bor, Op.Band -> Band, Op.Bxor -> Bxor, Op.Shl -> Shl, Op.Sshr -> Sshr, Op.Zshr -> Zshr, Op.Lt -> Lt, Op.Lte -> Lte, Op.Gt -> Gt, Op.Gte -> Gte, Op.Eq -> Eq, Op.Ne -> Ne, Op.Acos -> Acos, Op.Atan -> Atan, Op.Cos -> Cos, Op.Sin -> Sin, Op.Tan -> Tan, Op.Ceil -> Ceil, Op.Floor -> Floor, Op.Exp -> Exp, Op.Log -> Log, Op.Sqrt -> Sqrt, Op.Abs -> Abs, Op.Atan2 -> Atan2, Op.Imul -> Imul, Op.U8Store -> U8Store, Op.U8Load -> U8Load, Op.I8Store -> I8Store, Op.I8Load -> I8Load, Op.I16Store -> I16Store, Op.I16Load -> I16Load, Op.I32Store -> I32Store, Op.I32Load -> I32Load, Op.F32Store -> F32Store, Op.F32Load -> F32Load, Op.F64Store -> F64Store, Op.F64Load -> F64Load)
 }
 
 trait MachineOp {

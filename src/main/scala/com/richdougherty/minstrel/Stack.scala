@@ -15,6 +15,9 @@ class Stack(mem: Memory, baseAddr: Int) {
   def isEmpty: Boolean = {
     return top.get == min.get
   }
+  def seq: Seq[Double] = {
+    (min.get until top.get by 8).map(mem.f64Load)
+  }
 
   // get the top value
   def get: Double = {

@@ -2,6 +2,7 @@ package com.richdougherty.minstrel.compile
 
 import com.richdougherty.minstrel._
 import com.richdougherty.minstrel.assemble._
+import com.richdougherty.minstrel.parse._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable
@@ -16,10 +17,12 @@ object Compiler {
       for (ast <- df.body) ast match {
         case word: Word => newBody += word
         case num: Num => newBody += num
+        case quotWord: QuotWord => newBody += quotWord
         case Quot(body) =>
           val quotName = df.name+"-"+anonId
+          anonId += 1
           quotDefs += Def(quotName, body)
-          newBody += Word(quotName)
+          newBody += QuotWord(quotName)
       }
       flatDefs += df.copy(body = newBody.to[immutable.Seq])
       quotDefs.foreach(flattenDef)
@@ -41,6 +44,11 @@ object Compiler {
             OpCode(Op.Call)
           ))
           builder.appendAll(wordDirectives)
+        case QuotWord(name) =>
+          builder.appendAll(Seq(
+            OpCode(Op.Push),
+            LabelRef(F64Size, name)
+          ))
         case Num(value) =>
           builder.push(value)
         case Quot(body) => sys.error("quot not expected in flattened program")

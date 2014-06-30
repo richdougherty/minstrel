@@ -9,20 +9,24 @@ final class Machine(val mem: Memory) {
   val exec = new Stack(mem, ExecAddr)
   val data = new Stack(mem, DataAddr)
 
-  def step(): Int = {
+  def step(log: Boolean = false): Int = {
     if (exec.isEmpty) 0 else {
       val pc: Int = exec.get.toInt
       val opCode: Int = mem.i32Load(pc).toInt
       val op: Op = Op.byCode.getOrElse(opCode, sys.error(s"Unknown opCode $opCode at $pc"))
+      if (log) {
+        println(op.name)
+        println(data.seq.mkString("-> ", " ", ""))
+      }
       val machineOp: MachineOp = MachineOp.byOp.getOrElse(op, sys.error(s"No MachineOp for $op"))
       machineOp.step(this)
     }
   }
 
-  def run(): Int = {
+  def run(log: Boolean = false): Int = {
     @tailrec
     def run0(cyclesSoFar: Int): Int = {
-      val cycles = step()
+      val cycles = step(log)
       if (cycles == 0) cyclesSoFar else run0(cycles + cyclesSoFar)
     }
     run0(0)

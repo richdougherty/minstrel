@@ -14,6 +14,7 @@ object StandardImmediates {
     "ret" -> Seq(OpCode(Op.Ret)),
     "jmp" -> Seq(OpCode(Op.Jmp)),
     "call" -> Seq(OpCode(Op.Call)),
+    "if" -> Seq(OpCode(Op.If)),
     "neg" -> Seq(OpCode(Op.Neg)),
     "~" -> Seq(OpCode(Op.Bnot)),
     "!" -> Seq(OpCode(Op.Not)),

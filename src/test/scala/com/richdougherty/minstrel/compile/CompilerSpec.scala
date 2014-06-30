@@ -2,6 +2,7 @@ package com.richdougherty.minstrel.compile
 
 import com.richdougherty.minstrel._
 import com.richdougherty.minstrel.assemble._
+import com.richdougherty.minstrel.parse._
 import org.scalatest._
 
 class CompilerSpec extends UnitSpec {
