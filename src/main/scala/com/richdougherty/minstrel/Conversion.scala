@@ -11,6 +11,17 @@ object Conversion {
   val i32MaxF64: Double = Math.pow(2, 31)-1
   val i32MinF64: Double = -1*Math.pow(2, 31)
 
+  def f64ToI1(d: Double): Boolean = {
+    if (d == 0d) false else if (d == 1d) true else sys.error("$d is not a boolean value")
+  }
+  def i1ToF64(b: Boolean): Double = {
+    if (b) 1d else 0d
+  }
+  def i1ToBytes(b: Boolean): Array[Byte] = {
+    val arr = new Array[Byte](1)
+    arr(0) = if (b) 1 else 0
+    arr
+  }
   def f64ToI8(d: Double): Byte = {
     d.toByte
   }

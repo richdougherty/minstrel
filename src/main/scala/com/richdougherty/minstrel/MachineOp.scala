@@ -18,8 +18,23 @@ object MachineOp {
       1
     }
   }
-  val Pop = unimplemented("pop")
-  val Dup = unimplemented("dup")
+  object Pop extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      exec.push(exec.pop() + 4)
+      data.pop()
+      1
+    }
+  }
+  object Dup extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      exec.push(exec.pop() + 4)
+      val a = data.get
+      data.push(a)
+      1
+    }
+  }
   val Rot = unimplemented("rot")
   object Ret extends MachineOp {
     def step(m: Machine) = {
@@ -39,9 +54,9 @@ object MachineOp {
       1
     }
   }
-  val Neg = unimplemented("neg")
-  val Bnot = unimplemented("bnot")
-  val Not = unimplemented("not")
+  val Neg = UnaryMachineOp.f64((a: Double) => -a)
+  val Bnot = UnaryMachineOp.i32((a: Int) => ~a)
+  val Not = UnaryMachineOp.i1((a: Boolean) => !a)
   val Add = BinaryMachineOp.f64((a: Double, b: Double) => a + b)
   val Sub = BinaryMachineOp.f64((a: Double, b: Double) => a - b)
   val Mul = BinaryMachineOp.f64((a: Double, b: Double) => a * b)
@@ -50,28 +65,28 @@ object MachineOp {
   val Bor = BinaryMachineOp.i32((a: Int, b: Int) => a | b)
   val Band = BinaryMachineOp.i32((a: Int, b: Int) => a & b)
   val Bxor = BinaryMachineOp.i32((a: Int, b: Int) => a ^ b)
-  val Shl = unimplemented("shl")
-  val Sshr = unimplemented("sshr")
-  val Zshr = unimplemented("zshr")
-  val Lt = unimplemented("lt")
-  val Lte = unimplemented("lte")
-  val Gt = unimplemented("gt")
-  val Gte = unimplemented("gte")
-  val Eq = unimplemented("eq")
-  val Ne = unimplemented("ne")
-  val Acos = unimplemented("acos")
-  val Atan = unimplemented("atan")
-  val Cos = unimplemented("cos")
-  val Sin = unimplemented("sin")
-  val Tan = unimplemented("tan")
-  val Ceil = unimplemented("ceil")
-  val Floor = unimplemented("floor")
-  val Exp = unimplemented("exp")
-  val Log = unimplemented("log")
-  val Sqrt = unimplemented("sqrt")
-  val Abs = unimplemented("abs")
-  val Atan2 = unimplemented("atan2")
-  val Imul = unimplemented("imul")
+  val Shl = BinaryMachineOp.i32((a: Int, b: Int) => a << b)
+  val Sshr = BinaryMachineOp.i32((a: Int, b: Int) => a >> b)
+  val Zshr = BinaryMachineOp.i32((a: Int, b: Int) => a >>> b)
+  val Lt = BinaryMachineOp.cmp((a: Double, b: Double) => a < b)
+  val Lte = BinaryMachineOp.cmp((a: Double, b: Double) => a <= b)
+  val Gt = BinaryMachineOp.cmp((a: Double, b: Double) => a > b)
+  val Gte = BinaryMachineOp.cmp((a: Double, b: Double) => a >= b)
+  val Eq = BinaryMachineOp.cmp((a: Double, b: Double) => a == b)
+  val Ne = BinaryMachineOp.cmp((a: Double, b: Double) => a != b)
+  val Acos = UnaryMachineOp.f64((a: Double) => Math.acos(a))
+  val Atan = UnaryMachineOp.f64((a: Double) => Math.atan(a))
+  val Cos = UnaryMachineOp.f64((a: Double) => Math.cos(a))
+  val Sin = UnaryMachineOp.f64((a: Double) => Math.sin(a))
+  val Tan = UnaryMachineOp.f64((a: Double) => Math.tan(a))
+  val Ceil = UnaryMachineOp.f64((a: Double) => Math.ceil(a))
+  val Floor = UnaryMachineOp.f64((a: Double) => Math.floor(a))
+  val Exp = UnaryMachineOp.f64((a: Double) => Math.exp(a))
+  val Log = UnaryMachineOp.f64((a: Double) => Math.log(a))
+  val Sqrt = UnaryMachineOp.f64((a: Double) => Math.sqrt(a))
+  val Abs = UnaryMachineOp.f64((a: Double) => Math.abs(a))
+  val Atan2 = BinaryMachineOp.f64((a: Double, b: Double) => Math.atan2(a, b))
+  val Imul = BinaryMachineOp.i32((a: Int, b: Int) => a * b)
   val U8Store = unimplemented("u8store")
   val U8Load = unimplemented("u8load")
   val I8Store = unimplemented("i8store")
@@ -93,17 +108,50 @@ object MachineOp {
 trait MachineOp {
   def step(m: Machine): Int
 }
+
+object UnaryMachineOp {
+  def f64(f: Double => Double) = new UnaryMachineOp(f)
+  def i32(f: Int => Int) = UnaryMachineOp.f64 { ad: Double =>
+    val a: Int = f64ToI32(ad)
+    val b: Int = f(a)
+    val bd: Double = i32ToF64(b)
+    bd
+  }
+  def i1(f: Boolean => Boolean) = UnaryMachineOp.f64 { ad: Double =>
+    val a: Boolean = f64ToI1(ad)
+    val b: Boolean = f(a)
+    val bd: Double = i1ToF64(b)
+    bd
+  }
+}
+
+final class UnaryMachineOp(f: Double => Double) extends MachineOp {
+  def step(m: Machine): Int = {
+    import m._
+    val pc: Int = exec.pop().toInt
+    val a = data.pop()
+    val b = f(a)
+    data.push(b)
+    exec.push(pc + 4)
+    1
+  }
+}
+
 object BinaryMachineOp {
-  def f64(f: (Double,Double) => Double): BinaryMachineOp = new BinaryMachineOp(f)
-  def i32(f: (Int,Int) => Int): BinaryMachineOp = BinaryMachineOp.f64 { (ad: Double, bd: Double) =>
+  def f64(f: (Double,Double) => Double) = new BinaryMachineOp(f)
+  def i32(f: (Int,Int) => Int) = BinaryMachineOp.f64 { (ad: Double, bd: Double) =>
     val a: Int = f64ToI32(ad)
     val b: Int = f64ToI32(bd)
     val c: Int = f(a, b)
     val cd: Double = i32ToF64(c)
     cd
   }
+  def cmp(f: (Double,Double) => Boolean) = BinaryMachineOp.f64 { (a: Double, b: Double) =>
+    val c: Boolean = f(a, b)
+    val cd: Double = i1ToF64(c)
+    cd
+  }
 }
-
 final class BinaryMachineOp(f: (Double,Double) => Double) extends MachineOp {
   def step(m: Machine): Int = {
     import m._
