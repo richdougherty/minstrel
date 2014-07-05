@@ -7,8 +7,6 @@ import org.scalatest._
 
 class CompilerSpec extends UnitSpec {
 
-  import Conversion._
-
   def result(program: Program): Double = {
     val assembly = StandardHeader.directives(8, 8) ++ Compiler.compile(program)
     val binary = Assembler.assemble(assembly)

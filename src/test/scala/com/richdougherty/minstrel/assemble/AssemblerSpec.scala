@@ -5,8 +5,6 @@ import org.scalatest._
 
 class AssemblerSpec extends UnitSpec {
 
-  import Conversion._
-
   implicit class Hexable(bytes: Array[Byte]) {
     def toHex: String = {
       val sb = new StringBuilder(bytes.length * 2)
@@ -67,7 +65,7 @@ class AssemblerSpec extends UnitSpec {
       val assemblyBuilder = new AssemblyBuilder()
       import assemblyBuilder._
       push(123)
-      Assembler.assemble(directives).toHex should be (i32ToBytes(Op.Push.code).toHex ++ f64ToBytes(123).toHex)
+      Assembler.assemble(directives).toHex should be (I32.toBytes(Op.Push.code).toHex ++ F64.toBytes(123).toHex)
     }
     "start exec at main" in {
       val assemblyBuilder = new AssemblyBuilder()

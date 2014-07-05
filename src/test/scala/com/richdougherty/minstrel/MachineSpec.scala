@@ -5,8 +5,6 @@ import org.scalatest._
 
 class MachineSpec extends UnitSpec {
 
-  import Conversion._
-
   "Machines" should {
     def createMachine(addDirectives: AssemblyBuilder => Unit): Machine = {
       val assemblyBuilder = new AssemblyBuilder()

@@ -4,8 +4,6 @@ import org.scalatest._
 
 class StackSpec extends UnitSpec {
 
-  import Conversion._
-
   "Stacks" should {
     def createStack: Stack = {
       val mem = new Memory(36)

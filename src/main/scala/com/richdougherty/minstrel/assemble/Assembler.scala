@@ -1,7 +1,6 @@
 package com.richdougherty.minstrel.assemble
 
-import com.richdougherty.minstrel.Conversion._
-import com.richdougherty.minstrel.Op
+import com.richdougherty.minstrel._
 import java.nio.ByteBuffer
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
@@ -34,10 +33,10 @@ object Assembler {
 
     def putValue(s: Size, v: Double): Unit = s match {
       case I8Size =>
-        val b = f64ToI8(v)
+        val b = I8.fromDouble(v)
         buffer.put(b)
       case I32Size =>
-        buffer.putInt(f64ToI32(v))
+        buffer.putInt(I32.fromDouble(v))
       case F64Size =>
         buffer.putDouble(v)
     }

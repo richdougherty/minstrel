@@ -1,6 +1,5 @@
 package com.richdougherty.minstrel.assemble
 
-import com.richdougherty.minstrel.Conversion._
 import com.richdougherty.minstrel.Op
 import java.nio.ByteBuffer
 import scala.collection.mutable.ArrayBuffer

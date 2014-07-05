@@ -2,8 +2,6 @@ package com.richdougherty.minstrel
 
 import scala.annotation.tailrec
 
-import Conversion._
-
 object MachineOp {
   object Halt extends MachineOp {
     def step(m: Machine) = sys.error(s"Encountered halt instruction at ${m.exec.get.toInt}")
@@ -58,9 +56,9 @@ object MachineOp {
     def step(m: Machine) = {
       import m._
       val nextAddr = exec.pop().toInt + 4
-      val f = f64ToI32(data.pop())
-      val t = f64ToI32(data.pop())
-      val cond = f64ToI32(data.pop())
+      val f = I32.fromDouble(data.pop())
+      val t = I32.fromDouble(data.pop())
+      val cond = I32.fromDouble(data.pop())
       val branch = if (cond == 0) f else t
       exec.push(nextAddr)
       exec.push(branch)
@@ -125,17 +123,17 @@ trait MachineOp {
 object UnaryMachineOp {
   def f64(f: Double => Double) = new UnaryMachineOp(f)
   def i32(f: Int => Int) = UnaryMachineOp.f64 { ad: Double =>
-    val a: Int = f64ToI32(ad)
+    val a: Int = I32.fromDouble(ad)
     val b: Int = f(a)
-    val bd: Double = i32ToF64(b)
+    val bd: Double = I32.toDouble(b)
     bd
   }
   def i1(f: Boolean => Boolean) = UnaryMachineOp.f64 { ad: Double =>
-    val ai: Int = f64ToI32(ad)
+    val ai: Int = I32.fromDouble(ad)
     val a: Boolean = ai != 0
     val b: Boolean = f(a)
     val bi: Int = if (b) 1 else 0
-    val bd: Double = i32ToF64(bi)
+    val bd: Double = I32.toDouble(bi)
     bd
   }
 }
@@ -155,16 +153,16 @@ final class UnaryMachineOp(f: Double => Double) extends MachineOp {
 object BinaryMachineOp {
   def f64(f: (Double,Double) => Double) = new BinaryMachineOp(f)
   def i32(f: (Int,Int) => Int) = BinaryMachineOp.f64 { (ad: Double, bd: Double) =>
-    val a: Int = f64ToI32(ad)
-    val b: Int = f64ToI32(bd)
+    val a: Int = I32.fromDouble(ad)
+    val b: Int = I32.fromDouble(bd)
     val c: Int = f(a, b)
-    val cd: Double = i32ToF64(c)
+    val cd: Double = I32.toDouble(c)
     cd
   }
   def cmp(f: (Double,Double) => Boolean) = BinaryMachineOp.f64 { (a: Double, b: Double) =>
     val c: Boolean = f(a, b)
     val ci: Int = if (c) 1 else 0
-    val cd: Double = i32ToF64(ci)
+    val cd: Double = I32.toDouble(ci)
     cd
   }
 }
