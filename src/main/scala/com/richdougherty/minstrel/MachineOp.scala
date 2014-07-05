@@ -60,8 +60,8 @@ object MachineOp {
       val nextAddr = exec.pop().toInt + 4
       val f = f64ToI32(data.pop())
       val t = f64ToI32(data.pop())
-      val cond = f64ToI1(data.pop())
-      val branch = if (cond) t else f
+      val cond = f64ToI32(data.pop())
+      val branch = if (cond == 0) f else t
       exec.push(nextAddr)
       exec.push(branch)
       1
@@ -131,9 +131,11 @@ object UnaryMachineOp {
     bd
   }
   def i1(f: Boolean => Boolean) = UnaryMachineOp.f64 { ad: Double =>
-    val a: Boolean = f64ToI1(ad)
+    val ai: Int = f64ToI32(ad)
+    val a: Boolean = ai != 0
     val b: Boolean = f(a)
-    val bd: Double = i1ToF64(b)
+    val bi: Int = if (b) 1 else 0
+    val bd: Double = i32ToF64(bi)
     bd
   }
 }
@@ -161,7 +163,8 @@ object BinaryMachineOp {
   }
   def cmp(f: (Double,Double) => Boolean) = BinaryMachineOp.f64 { (a: Double, b: Double) =>
     val c: Boolean = f(a, b)
-    val cd: Double = i1ToF64(c)
+    val ci: Int = if (c) 1 else 0
+    val cd: Double = i32ToF64(ci)
     cd
   }
 }

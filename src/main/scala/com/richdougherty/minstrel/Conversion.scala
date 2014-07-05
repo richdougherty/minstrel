@@ -11,9 +11,6 @@ object Conversion {
   val i32MaxF64: Double = Math.pow(2, 31)-1
   val i32MinF64: Double = -1*Math.pow(2, 31)
 
-  def f64ToI1(d: Double): Boolean = U1.fromDouble(d)
-  def i1ToF64(b: Boolean): Double = U1.toDouble(b)
-  def i1ToBytes(b: Boolean): Array[Byte] = U1.toBytes(b)
   def f64ToI8(d: Double): Byte = I8.fromDouble(d)
   def i8ToF64(b: Byte): Double = I8.toDouble(b)
   def i8ToBytes(b: Byte): Array[Byte] = I8.toBytes(b)
