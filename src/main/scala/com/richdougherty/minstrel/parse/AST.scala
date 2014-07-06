@@ -15,6 +15,7 @@ object Quot {
 }
 final case class QuotWord(name: String) extends AST
 final case class Num(value: Double) extends AST
+final case class Ref(name: String) extends AST
 
 final case class Program(defs: immutable.Seq[Def])
 object Program {

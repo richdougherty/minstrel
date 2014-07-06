@@ -8,7 +8,8 @@ import org.scalatest._
 class CompilerSpec extends UnitSpec {
 
   def result(program: Program): Double = {
-    val assembly = StandardHeader.directives(8, 8) ++ Compiler.compile(program)
+    val space = Seq(Label("space"), Repeat(1024, Literal(I8Size, 0)))
+    val assembly = StandardHeader.directives(8, 8) ++ Compiler.compile(program) ++ space
     val binary = Assembler.assemble(assembly)
     val machine = new Machine(new Memory(binary))
     machine.run()
@@ -46,6 +47,21 @@ class CompilerSpec extends UnitSpec {
         Def("main", Word("subroutine")),
         Def("subroutine", Num(12))
       )) should be (12d)
+    }
+    "store and reload u8 values" in {
+      result(Program(
+        Def("main", Ref("space"), Num(33), Word(">u8"), Ref("space"), Word("u8>"))
+      )) should be (33d)
+    }
+    "store and reload i32 values" in {
+      result(Program(
+        Def("main", Ref("space"), Num(123123123d), Word(">i32"), Ref("space"), Word("i32>"))
+      )) should be (123123123d)
+    }
+    "store and reload f64 values" in {
+      result(Program(
+        Def("main", Ref("space"), Num(123123123d), Word(">f64"), Ref("space"), Word("f64>"))
+      )) should be (123123123d)
     }
   }
 }

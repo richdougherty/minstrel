@@ -16,6 +16,7 @@ object Parser {
     final case object CommentEndToken extends Token
     final case class NumToken(value: Double) extends Token
     final case class WordToken(name: String) extends Token
+    final case class RefToken(name: String) extends Token
 
     var tokens = {
       val strings = text.split("\\s").map(_.trim).filter(!_.isEmpty)
@@ -25,6 +26,11 @@ object Parser {
         case "]" => QuotEndToken
         case "(" => CommentStartToken
         case ")" => CommentEndToken
+        case s if s.startsWith("@") =>
+          s.splitAt(1) match {
+            case (_, "") => sys.error("@ references must have a name")
+            case (_, name: String) => RefToken(name)
+          }
         case s =>
           import java.lang.Double.parseDouble
           try NumToken(parseDouble(s)) catch { case _: NumberFormatException => WordToken(s) }

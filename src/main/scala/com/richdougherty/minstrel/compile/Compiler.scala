@@ -15,14 +15,12 @@ object Compiler {
       var newBody = new ArrayBuffer[AST]
       var quotDefs = new ArrayBuffer[Def]
       for (ast <- df.body) ast match {
-        case word: Word => newBody += word
-        case num: Num => newBody += num
-        case quotWord: QuotWord => newBody += quotWord
         case Quot(body) =>
           val quotName = df.name+"-"+anonId
           anonId += 1
           quotDefs += Def(quotName, body)
           newBody += QuotWord(quotName)
+        case other => newBody += other
       }
       flatDefs += df.copy(body = newBody.to[immutable.Seq])
       quotDefs.foreach(flattenDef)
@@ -52,6 +50,11 @@ object Compiler {
         case Num(value) =>
           builder.push(value)
         case Quot(body) => sys.error("quot not expected in flattened program")
+        case Ref(name) =>
+          builder.appendAll(Seq(
+            OpCode(Op.Push),
+            LabelRef(F64Size, name)
+          ))
       }
       builder.ret()
     }
