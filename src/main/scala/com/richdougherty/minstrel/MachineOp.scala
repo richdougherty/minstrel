@@ -98,22 +98,26 @@ object MachineOp {
   val Abs = UnaryMachineOp.f64((a: Double) => Math.abs(a))
   val Atan2 = BinaryMachineOp.f64((a: Double, b: Double) => Math.atan2(a, b))
   val Imul = BinaryMachineOp.i32((a: Int, b: Int) => a * b)
-  val U8Store = unimplemented("u8store")
-  val U8Load = unimplemented("u8load")
-  val I8Store = unimplemented("i8store")
-  val I8Load = unimplemented("i8load")
-  val I16Store = unimplemented("i16store")
-  val I16Load = unimplemented("i16load")
-  val I32Store = unimplemented("i32store")
-  val I32Load = unimplemented("i32load")
-  val F32Store = unimplemented("f32store")
-  val F32Load = unimplemented("f32load")
-  val F64Store = unimplemented("f64store")
-  val F64Load = unimplemented("f64load")
+  val I8Store = StoreMachineOp(I8)
+  val I8Load = LoadMachineOp(I8)
+  val U8Store = StoreMachineOp(U8)
+  val U8Load = LoadMachineOp(U8)
+  val I16Store = StoreMachineOp(I16)
+  val I16Load = LoadMachineOp(I16)
+  val U16Store = StoreMachineOp(U16)
+  val U16Load = LoadMachineOp(U16)
+  val I32Store = StoreMachineOp(I32)
+  val I32Load = LoadMachineOp(I32)
+  val U32Store = StoreMachineOp(U32)
+  val U32Load = LoadMachineOp(U32)
+  val F32Store = StoreMachineOp(F32)
+  val F32Load = LoadMachineOp(F32)
+  val F64Store = StoreMachineOp(F64)
+  val F64Load = LoadMachineOp(F64)
   private def unimplemented(name: String) = new MachineOp {
     def step(m: Machine): Int = sys.error(s"op $name not implemented")
   }
-  val byOp: Map[Op, MachineOp] = Map(Op.Halt -> Halt, Op.Push -> Push, Op.Pop -> Pop, Op.Dup -> Dup, Op.Rot -> Rot, Op.Ret -> Ret, Op.Jmp -> Jmp, Op.Call -> Call, Op.If -> If, Op.Neg -> Neg, Op.Bnot -> Bnot, Op.Not -> Not, Op.Add -> Add, Op.Sub -> Sub, Op.Mul -> Mul, Op.Div -> Div, Op.Mod -> Mod, Op.Bor -> Bor, Op.Band -> Band, Op.Bxor -> Bxor, Op.Shl -> Shl, Op.Sshr -> Sshr, Op.Zshr -> Zshr, Op.Lt -> Lt, Op.Lte -> Lte, Op.Gt -> Gt, Op.Gte -> Gte, Op.Eq -> Eq, Op.Ne -> Ne, Op.Acos -> Acos, Op.Atan -> Atan, Op.Cos -> Cos, Op.Sin -> Sin, Op.Tan -> Tan, Op.Ceil -> Ceil, Op.Floor -> Floor, Op.Exp -> Exp, Op.Log -> Log, Op.Sqrt -> Sqrt, Op.Abs -> Abs, Op.Atan2 -> Atan2, Op.Imul -> Imul, Op.U8Store -> U8Store, Op.U8Load -> U8Load, Op.I8Store -> I8Store, Op.I8Load -> I8Load, Op.I16Store -> I16Store, Op.I16Load -> I16Load, Op.I32Store -> I32Store, Op.I32Load -> I32Load, Op.F32Store -> F32Store, Op.F32Load -> F32Load, Op.F64Store -> F64Store, Op.F64Load -> F64Load)
+  val byOp: Map[Op, MachineOp] = Map(Op.Halt -> Halt, Op.Push -> Push, Op.Pop -> Pop, Op.Dup -> Dup, Op.Rot -> Rot, Op.Ret -> Ret, Op.Jmp -> Jmp, Op.Call -> Call, Op.If -> If, Op.Neg -> Neg, Op.Bnot -> Bnot, Op.Not -> Not, Op.Add -> Add, Op.Sub -> Sub, Op.Mul -> Mul, Op.Div -> Div, Op.Mod -> Mod, Op.Bor -> Bor, Op.Band -> Band, Op.Bxor -> Bxor, Op.Shl -> Shl, Op.Sshr -> Sshr, Op.Zshr -> Zshr, Op.Lt -> Lt, Op.Lte -> Lte, Op.Gt -> Gt, Op.Gte -> Gte, Op.Eq -> Eq, Op.Ne -> Ne, Op.Acos -> Acos, Op.Atan -> Atan, Op.Cos -> Cos, Op.Sin -> Sin, Op.Tan -> Tan, Op.Ceil -> Ceil, Op.Floor -> Floor, Op.Exp -> Exp, Op.Log -> Log, Op.Sqrt -> Sqrt, Op.Abs -> Abs, Op.Atan2 -> Atan2, Op.Imul -> Imul, Op.I8Store -> I8Store, Op.I8Load -> I8Load, Op.U8Store -> U8Store, Op.U8Load -> U8Load, Op.I16Store -> I16Store, Op.I16Load -> I16Load, Op.U16Store -> U16Store, Op.U16Load -> U16Load, Op.I32Store -> I32Store, Op.I32Load -> I32Load, Op.U32Store -> U32Store, Op.U32Load -> U32Load, Op.F32Store -> F32Store, Op.F32Load -> F32Load, Op.F64Store -> F64Store, Op.F64Load -> F64Load)
 }
 
 trait MachineOp {
@@ -174,6 +178,38 @@ final class BinaryMachineOp(f: (Double,Double) => Double) extends MachineOp {
     val a = data.pop()
     val c = f(a, b)
     data.push(c)
+    exec.push(pc + 4)
+    1
+  }
+}
+object LoadMachineOp {
+  def apply[T](num: Number[T]) = new LoadMachineOp(num)
+}
+final class LoadMachineOp[T](num: Number[T]) extends MachineOp {
+  def step(m: Machine): Int = {
+    import m._
+    val pc: Int = exec.pop().toInt
+    val addrd: Double = data.pop()
+    val addr: Int = I32.fromDouble(addrd)
+    val x: T = m.mem.load(num, addr)
+    val xd: Double = num.toDouble(x)
+    data.push(xd)
+    exec.push(pc + 4)
+    1
+  }
+}
+object StoreMachineOp {
+  def apply[T](num: Number[T]) = new StoreMachineOp(num)
+}
+final class StoreMachineOp[T](num: Number[T]) extends MachineOp {
+  def step(m: Machine): Int = {
+    import m._
+    val pc: Int = exec.pop().toInt
+    val xd: Double = data.pop()
+    val x: T = num.fromDouble(xd)
+    val addrd: Double = data.pop()
+    val addr: Int = I32.fromDouble(addrd)
+    m.mem.store(num, addr, x)
     exec.push(pc + 4)
     1
   }

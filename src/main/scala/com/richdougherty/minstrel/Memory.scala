@@ -7,6 +7,14 @@ class Memory(raw: Array[Byte]) {
 
   private val buffer = java.nio.ByteBuffer.wrap(raw)
 
+  def store[T](num: Number[T], addr: Int, value: T): Unit = {
+    num.put(buffer, addr, value)
+  }
+
+  def load[T](num: Number[T], addr: Int): T = {
+    num.get(buffer, addr)
+  }
+
   def u32Load(addr: Int): Double = {
     U32.toDouble(buffer.getInt(addr))
   }
