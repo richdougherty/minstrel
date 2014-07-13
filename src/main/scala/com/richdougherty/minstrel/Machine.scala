@@ -8,6 +8,8 @@ final class Machine(val mem: Memory) {
   import Machine._
   val exec = new Stack(mem, ExecAddr)
   val data = new Stack(mem, DataAddr)
+  val inbox = new Mailbox
+  val outbox = new Mailbox
 
   def step(log: Boolean = false): Int = {
     if (exec.isEmpty) 0 else {

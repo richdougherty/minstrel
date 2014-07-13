@@ -60,8 +60,12 @@ object Op {
   val F32Load = Op(55, "f32load", Some("f32>"))
   val F64Store = Op(56, "f64store", Some(">f64"))
   val F64Load = Op(57, "f64load", Some("f64>"))
+  val Msgsize = Op(58, "msgsize", Some("msgsize"))
+  val Msgpop = Op(59, "msgpop", Some("msgpop"))
+  val Msgpush = Op(60, "msgpush", Some("msgpush"))
+  val Send = Op(61, "send", Some("send"))
 
-  val all = Seq(Halt, Push, Pop, Dup, Rot, Ret, Jmp, Call, If, Neg, Bnot, Not, Add, Sub, Mul, Div, Mod, Bor, Band, Bxor, Shl, Sshr, Zshr, Lt, Lte, Gt, Gte, Eq, Ne, Acos, Atan, Cos, Sin, Tan, Ceil, Floor, Exp, Log, Sqrt, Abs, Atan2, Imul, I8Store, I8Load, U8Store, U8Load, I16Store, I16Load, U16Store, U16Load, I32Store, I32Load, U32Store, U32Load, F32Store, F32Load, F64Store, F64Load)
+  val all = Seq(Halt, Push, Pop, Dup, Rot, Ret, Jmp, Call, If, Neg, Bnot, Not, Add, Sub, Mul, Div, Mod, Bor, Band, Bxor, Shl, Sshr, Zshr, Lt, Lte, Gt, Gte, Eq, Ne, Acos, Atan, Cos, Sin, Tan, Ceil, Floor, Exp, Log, Sqrt, Abs, Atan2, Imul, I8Store, I8Load, U8Store, U8Load, I16Store, I16Load, U16Store, U16Load, I32Store, I32Load, U32Store, U32Load, F32Store, F32Load, F64Store, F64Load, Msgsize, Msgpop, Msgpush, Send)
 
   val byName: Map[String, Op] = Map(all.map(op => op.name -> op): _*)
   val byCode: Map[Int, Op] = Map(all.map(op => op.code -> op): _*)

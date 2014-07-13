@@ -63,7 +63,11 @@ object StandardImmediates {
     ">f32" -> Seq(OpCode(Op.F32Store)),
     "f32>" -> Seq(OpCode(Op.F32Load)),
     ">f64" -> Seq(OpCode(Op.F64Store)),
-    "f64>" -> Seq(OpCode(Op.F64Load))
+    "f64>" -> Seq(OpCode(Op.F64Load)),
+    "msgsize" -> Seq(OpCode(Op.Msgsize)),
+    "msgpop" -> Seq(OpCode(Op.Msgpop)),
+    "msgpush" -> Seq(OpCode(Op.Msgpush)),
+    "send" -> Seq(OpCode(Op.Send))
   )
 
 }

@@ -6,9 +6,17 @@ import com.richdougherty.minstrel.parse._
 
 object Minstrel {
 
-  def run(source: String, execStackSize: Int = 256, dataStackSize: Int = 256, log: Boolean = false): Double = {
+  def run(
+    source: String,
+    extraDirectives: Seq[Directive] = Seq.empty,
+    execStackSize: Int = 256,
+    dataStackSize: Int = 256,
+    log: Boolean = false): Double = {
     val ast = Parser.parse(source)
-    val assembly = StandardHeader.directives(execStackSize, dataStackSize) ++ Compiler.compile(ast)
+    val assembly =
+      StandardHeader.directives(execStackSize, dataStackSize) ++
+      Compiler.compile(ast) ++
+      extraDirectives
     val binary = Assembler.assemble(assembly)
     val machine = new Machine(new Memory(binary))
     machine.run(log = log)

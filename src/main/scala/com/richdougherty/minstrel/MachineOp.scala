@@ -114,10 +114,70 @@ object MachineOp {
   val F32Load = LoadMachineOp(F32)
   val F64Store = StoreMachineOp(F64)
   val F64Load = LoadMachineOp(F64)
+  object Msgsize extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      val pc: Int = exec.pop().toInt
+      val size = inbox.sizeFirst.get
+      val sized = I32.toDouble(size)
+      data.push(sized)
+      exec.push(pc + 4)
+      1
+    }
+  }
+  object Msgpop extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      val pc: Int = exec.pop().toInt
+      val addrd: Double = data.pop()
+      val addr: Int = I32.fromDouble(addrd)
+      val msg = inbox.popFirst().get
+      for (i <- 0 until msg.content.size) {
+        val x: Byte = msg.content(i)
+        mem.store(I8, addr+i, x)
+      }
+      exec.push(pc + 4)
+      1
+    }
+  }
+  object Msgpush extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      val pc: Int = exec.pop().toInt
+      val len: Int = I32.fromDouble(data.pop())
+      // TODO: Check len
+      val addr: Int = I32.fromDouble(data.pop())
+      val content = new Array[Byte](len)
+      for (i <- 0 until len) {
+        val x: Byte = mem.load(I8, addr+i)
+        content(i) = x
+      }
+      inbox.pushFirst(Message(content))
+      exec.push(pc + 4)
+      1
+    }
+  }
+  object Send extends MachineOp {
+    def step(m: Machine) = {
+      import m._
+      val pc: Int = exec.pop().toInt
+      val len: Int = I32.fromDouble(data.pop())
+      // TODO: Check len
+      val addr: Int = I32.fromDouble(data.pop())
+      val content = new Array[Byte](len)
+      for (i <- 0 until len) {
+        val x: Byte = mem.load(I8, addr+i)
+        content(i) = x
+      }
+      outbox.pushLast(Message(content))
+      exec.push(pc + 4)
+      1
+    }
+  }
   private def unimplemented(name: String) = new MachineOp {
     def step(m: Machine): Int = sys.error(s"op $name not implemented")
   }
-  val byOp: Map[Op, MachineOp] = Map(Op.Halt -> Halt, Op.Push -> Push, Op.Pop -> Pop, Op.Dup -> Dup, Op.Rot -> Rot, Op.Ret -> Ret, Op.Jmp -> Jmp, Op.Call -> Call, Op.If -> If, Op.Neg -> Neg, Op.Bnot -> Bnot, Op.Not -> Not, Op.Add -> Add, Op.Sub -> Sub, Op.Mul -> Mul, Op.Div -> Div, Op.Mod -> Mod, Op.Bor -> Bor, Op.Band -> Band, Op.Bxor -> Bxor, Op.Shl -> Shl, Op.Sshr -> Sshr, Op.Zshr -> Zshr, Op.Lt -> Lt, Op.Lte -> Lte, Op.Gt -> Gt, Op.Gte -> Gte, Op.Eq -> Eq, Op.Ne -> Ne, Op.Acos -> Acos, Op.Atan -> Atan, Op.Cos -> Cos, Op.Sin -> Sin, Op.Tan -> Tan, Op.Ceil -> Ceil, Op.Floor -> Floor, Op.Exp -> Exp, Op.Log -> Log, Op.Sqrt -> Sqrt, Op.Abs -> Abs, Op.Atan2 -> Atan2, Op.Imul -> Imul, Op.I8Store -> I8Store, Op.I8Load -> I8Load, Op.U8Store -> U8Store, Op.U8Load -> U8Load, Op.I16Store -> I16Store, Op.I16Load -> I16Load, Op.U16Store -> U16Store, Op.U16Load -> U16Load, Op.I32Store -> I32Store, Op.I32Load -> I32Load, Op.U32Store -> U32Store, Op.U32Load -> U32Load, Op.F32Store -> F32Store, Op.F32Load -> F32Load, Op.F64Store -> F64Store, Op.F64Load -> F64Load)
+  val byOp: Map[Op, MachineOp] = Map(Op.Halt -> Halt, Op.Push -> Push, Op.Pop -> Pop, Op.Dup -> Dup, Op.Rot -> Rot, Op.Ret -> Ret, Op.Jmp -> Jmp, Op.Call -> Call, Op.If -> If, Op.Neg -> Neg, Op.Bnot -> Bnot, Op.Not -> Not, Op.Add -> Add, Op.Sub -> Sub, Op.Mul -> Mul, Op.Div -> Div, Op.Mod -> Mod, Op.Bor -> Bor, Op.Band -> Band, Op.Bxor -> Bxor, Op.Shl -> Shl, Op.Sshr -> Sshr, Op.Zshr -> Zshr, Op.Lt -> Lt, Op.Lte -> Lte, Op.Gt -> Gt, Op.Gte -> Gte, Op.Eq -> Eq, Op.Ne -> Ne, Op.Acos -> Acos, Op.Atan -> Atan, Op.Cos -> Cos, Op.Sin -> Sin, Op.Tan -> Tan, Op.Ceil -> Ceil, Op.Floor -> Floor, Op.Exp -> Exp, Op.Log -> Log, Op.Sqrt -> Sqrt, Op.Abs -> Abs, Op.Atan2 -> Atan2, Op.Imul -> Imul, Op.I8Store -> I8Store, Op.I8Load -> I8Load, Op.U8Store -> U8Store, Op.U8Load -> U8Load, Op.I16Store -> I16Store, Op.I16Load -> I16Load, Op.U16Store -> U16Store, Op.U16Load -> U16Load, Op.I32Store -> I32Store, Op.I32Load -> I32Load, Op.U32Store -> U32Store, Op.U32Load -> U32Load, Op.F32Store -> F32Store, Op.F32Load -> F32Load, Op.F64Store -> F64Store, Op.F64Load -> F64Load, Op.Msgsize -> Msgsize, Op.Msgpop -> Msgpop, Op.Msgpush -> Msgpush, Op.Send -> Send)
 }
 
 trait MachineOp {
