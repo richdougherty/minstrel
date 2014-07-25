@@ -83,7 +83,7 @@ class CompilerSpec extends UnitSpec {
       val m = run(Program(
         Def("main",
           body = pushHelloWorld ++ Vector(
-            Ref("space"), Num(helloWorldBytes.length), Word("send")
+            Ref("space"), Num(helloWorldBytes.length), Word(">out")
           )
         )
       ))
@@ -93,11 +93,25 @@ class CompilerSpec extends UnitSpec {
     "receive 'hello world'" in {
       val helloWorldBytes = "hello world".getBytes("US-ASCII")
       val m = result(
-        program = Program(Def("main", Vector(Ref("space"), Word("msgpop"), Ref("space"), Word("u8>")))),
+        program = Program(Def("main", Vector(Ref("space"), Word("in>"), Ref("space"), Word("u8>")))),
         prepareMachine = { m: Machine =>
           m.inbox.pushFirst(Message(helloWorldBytes))
         }
       ) should be (helloWorldBytes(0))
+    }
+    "get the size of a 'hello world' message" in {
+      val helloWorldBytes = "hello world".getBytes("US-ASCII")
+      val m = result(
+        program = Program(Def("main", Vector(Word("in?")))),
+        prepareMachine = { m: Machine =>
+          m.inbox.pushFirst(Message(helloWorldBytes))
+        }
+      ) should be (11)
+    }
+    "report 0 input size when input is empty" in {
+      result(Program(
+        Def("main", Word("in?"))
+      )) should be (0d)
     }
 
   }
