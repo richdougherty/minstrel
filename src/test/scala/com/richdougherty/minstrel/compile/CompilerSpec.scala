@@ -7,17 +7,18 @@ import org.scalatest._
 
 class CompilerSpec extends UnitSpec {
 
-  def run(program: Program): Machine = {
+  def run(program: Program, prepareMachine: Machine => Unit = (_: Machine) => ()): Machine = {
     val space = Seq(Label("space"), Repeat(1024, Literal(I8Size, 0)))
     val assembly = StandardHeader.directives(8, 8) ++ Compiler.compile(program) ++ space
     val binary = Assembler.assemble(assembly)
     val machine = new Machine(new Memory(binary))
+    prepareMachine(machine)
     machine.run()
     machine
   }
 
-  def result(program: Program): Double = {
-    val machine = run(program)
+  def result(program: Program, prepareMachine: Machine => Unit = (_: Machine) => ()): Double = {
+    val machine = run(program, prepareMachine)
     machine.data.get
   }
 
@@ -88,6 +89,15 @@ class CompilerSpec extends UnitSpec {
       ))
       m.outbox.messageCount should be (1)
       m.outbox.popFirst().map(_.content.to[Seq]) should be (Some(helloWorldBytes.to[Seq]))
+    }
+    "receive 'hello world'" in {
+      val helloWorldBytes = "hello world".getBytes("US-ASCII")
+      val m = result(
+        program = Program(Def("main", Vector(Ref("space"), Word("msgpop"), Ref("space"), Word("u8>")))),
+        prepareMachine = { m: Machine =>
+          m.inbox.pushFirst(Message(helloWorldBytes))
+        }
+      ) should be (helloWorldBytes(0))
     }
 
   }

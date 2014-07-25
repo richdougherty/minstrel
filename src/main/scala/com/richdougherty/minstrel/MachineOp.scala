@@ -129,8 +129,7 @@ object MachineOp {
     def step(m: Machine) = {
       import m._
       val pc: Int = exec.pop().toInt
-      val addrd: Double = data.pop()
-      val addr: Int = I32.fromDouble(addrd)
+      val addr: Int = I32.fromDouble(data.pop())
       val msg = inbox.popFirst().get
       for (i <- 0 until msg.content.size) {
         val x: Byte = msg.content(i)
