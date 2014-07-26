@@ -93,7 +93,7 @@ class CompilerSpec extends UnitSpec {
     "receive 'hello world'" in {
       val helloWorldBytes = "hello world".getBytes("US-ASCII")
       val m = result(
-        program = Program(Def("main", Vector(Ref("space"), Word("in>"), Ref("space"), Word("u8>")))),
+        program = Program(Def("main", Vector(Ref("space"), Num(0), Num(helloWorldBytes.length), Word("in>"), Ref("space"), Word("u8>")))),
         prepareMachine = { m: Machine =>
           m.inbox.pushFirst(Message(helloWorldBytes))
         }

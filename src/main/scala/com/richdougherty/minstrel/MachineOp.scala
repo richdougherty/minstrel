@@ -2,12 +2,14 @@ package com.richdougherty.minstrel
 
 import scala.annotation.tailrec
 
+import Machine._
+
 object MachineOp {
-  object Halt extends MachineOp {
-    def step(m: Machine) = sys.error(s"Encountered halt instruction at ${m.exec.get.toInt}")
+  object Halt extends IoMachineOp {
+    def ioStep(m: Machine) = (0, IO.Halt)
   }
-  object Push extends MachineOp {
-    def step(m: Machine) = {
+  object Push extends PureMachineOp {
+    def pureStep(m: Machine) = {
       import m._
       val pc: Int = exec.pop().toInt
       val value: Double = mem.f64Load(pc + 4)
@@ -16,16 +18,16 @@ object MachineOp {
       1
     }
   }
-  object Pop extends MachineOp {
-    def step(m: Machine) = {
+  object Pop extends PureMachineOp {
+    def pureStep(m: Machine) = {
       import m._
       exec.push(exec.pop() + 4)
       data.pop()
       1
     }
   }
-  object Dup extends MachineOp {
-    def step(m: Machine) = {
+  object Dup extends PureMachineOp {
+    def pureStep(m: Machine) = {
       import m._
       exec.push(exec.pop() + 4)
       val a = data.get
@@ -34,16 +36,16 @@ object MachineOp {
     }
   }
   val Rot = unimplemented("rot")
-  object Ret extends MachineOp {
-    def step(m: Machine) = {
+  object Ret extends PureMachineOp {
+    def pureStep(m: Machine) = {
       import m._
       exec.pop()
       1
     }
   }
   val Jmp = unimplemented("jmp")
-  object Call extends MachineOp {
-    def step(m: Machine) = {
+  object Call extends PureMachineOp {
+    def pureStep(m: Machine) = {
       import m._
       val retAddr = exec.pop() + 4
       exec.push(retAddr)
@@ -52,8 +54,8 @@ object MachineOp {
       1
     }
   }
-  object If extends MachineOp {
-    def step(m: Machine) = {
+  object If extends PureMachineOp {
+    def pureStep(m: Machine) = {
       import m._
       val nextAddr = exec.pop().toInt + 4
       val f = I32.fromDouble(data.pop())
@@ -114,56 +116,58 @@ object MachineOp {
   val F32Load = LoadMachineOp(F32)
   val F64Store = StoreMachineOp(F64)
   val F64Load = LoadMachineOp(F64)
-  object In_Size extends MachineOp {
-    def step(m: Machine) = {
+  object In_Size extends IoMachineOp {
+    def ioStep(m: Machine) = {
       import m._
       val pc: Int = exec.pop().toInt
-      val size = inbox.sizeFirst.getOrElse(0)
-      data.push(I32.toDouble(size))
       exec.push(pc + 4)
-      1
+      (1, IO.InSize)
     }
   }
   val In_Wait = unimplemented("in_wait")
-  object In_Read extends MachineOp {
-    def step(m: Machine) = {
+  object In_Read extends IoMachineOp {
+    def ioStep(m: Machine) = {
       import m._
       val pc: Int = exec.pop().toInt
-      val addr: Int = I32.fromDouble(data.pop())
-      val msg = inbox.popFirst().get
-      for (i <- 0 until msg.content.size) {
-        val x: Byte = msg.content(i)
-        mem.store(I8, addr+i, x)
-      }
       exec.push(pc + 4)
-      1
+      val length: Int = I32.fromDouble(data.pop())
+      val msgOffset: Int = I32.fromDouble(data.pop())
+      val memAddr: Int = I32.fromDouble(data.pop())
+      (1, IO.InRead(memAddr, msgOffset, length))
     }
   }
-  object Out_Write extends MachineOp {
-    def step(m: Machine) = {
+  object Out_Write extends IoMachineOp {
+    def ioStep(m: Machine) = {
       import m._
       val pc: Int = exec.pop().toInt
-      val len: Int = I32.fromDouble(data.pop())
-      // TODO: Check len
-      val addr: Int = I32.fromDouble(data.pop())
-      val content = new Array[Byte](len)
-      for (i <- 0 until len) {
-        val x: Byte = mem.load(I8, addr+i)
-        content(i) = x
-      }
-      outbox.pushLast(Message(content))
       exec.push(pc + 4)
-      1
+      val length: Int = I32.fromDouble(data.pop())
+      // TODO: Check length
+      val memAddr: Int = I32.fromDouble(data.pop())
+      (1, IO.OutWrite(memAddr, length))
     }
   }
-  private def unimplemented(name: String) = new MachineOp {
-    def step(m: Machine): Int = sys.error(s"op $name not implemented")
+  private def unimplemented(name: String) = new PureMachineOp {
+    def pureStep(m: Machine): Int = sys.error(s"op $name not implemented")
   }
   val byOp: Map[Op, MachineOp] = Map(Op.Halt -> Halt, Op.Push -> Push, Op.Pop -> Pop, Op.Dup -> Dup, Op.Rot -> Rot, Op.Ret -> Ret, Op.Jmp -> Jmp, Op.Call -> Call, Op.If -> If, Op.Neg -> Neg, Op.Bnot -> Bnot, Op.Not -> Not, Op.Add -> Add, Op.Sub -> Sub, Op.Mul -> Mul, Op.Div -> Div, Op.Mod -> Mod, Op.Bor -> Bor, Op.Band -> Band, Op.Bxor -> Bxor, Op.Shl -> Shl, Op.Sshr -> Sshr, Op.Zshr -> Zshr, Op.Lt -> Lt, Op.Lte -> Lte, Op.Gt -> Gt, Op.Gte -> Gte, Op.Eq -> Eq, Op.Ne -> Ne, Op.Acos -> Acos, Op.Atan -> Atan, Op.Cos -> Cos, Op.Sin -> Sin, Op.Tan -> Tan, Op.Ceil -> Ceil, Op.Floor -> Floor, Op.Exp -> Exp, Op.Log -> Log, Op.Sqrt -> Sqrt, Op.Abs -> Abs, Op.Atan2 -> Atan2, Op.Imul -> Imul, Op.I8Store -> I8Store, Op.I8Load -> I8Load, Op.U8Store -> U8Store, Op.U8Load -> U8Load, Op.I16Store -> I16Store, Op.I16Load -> I16Load, Op.U16Store -> U16Store, Op.U16Load -> U16Load, Op.I32Store -> I32Store, Op.I32Load -> I32Load, Op.U32Store -> U32Store, Op.U32Load -> U32Load, Op.F32Store -> F32Store, Op.F32Load -> F32Load, Op.F64Store -> F64Store, Op.F64Load -> F64Load, Op.In_Size -> In_Size, Op.In_Wait -> In_Wait, Op.In_Read -> In_Read, Op.Out_Write -> Out_Write)
 }
 
 trait MachineOp {
-  def step(m: Machine): Int
+  def step(m: Machine): StepResult
+}
+
+abstract class PureMachineOp extends MachineOp {
+  final def step(m: Machine): StepResult = StepResult(pureStep(m), None)
+  def pureStep(m: Machine): Int
+}
+
+abstract class IoMachineOp extends MachineOp {
+  final def step(m: Machine): StepResult = {
+    val (cycles, io) = ioStep(m)
+    StepResult(cycles, Some(io))
+  }
+  def ioStep(m: Machine): (Int, IO)
 }
 
 object UnaryMachineOp {
@@ -184,8 +188,8 @@ object UnaryMachineOp {
   }
 }
 
-final class UnaryMachineOp(f: Double => Double) extends MachineOp {
-  def step(m: Machine): Int = {
+final class UnaryMachineOp(f: Double => Double) extends PureMachineOp {
+  def pureStep(m: Machine): Int = {
     import m._
     val pc: Int = exec.pop().toInt
     val a = data.pop()
@@ -212,8 +216,8 @@ object BinaryMachineOp {
     cd
   }
 }
-final class BinaryMachineOp(f: (Double,Double) => Double) extends MachineOp {
-  def step(m: Machine): Int = {
+final class BinaryMachineOp(f: (Double,Double) => Double) extends PureMachineOp {
+  def pureStep(m: Machine): Int = {
     import m._
     val pc: Int = exec.pop().toInt
     val b = data.pop()
@@ -227,8 +231,8 @@ final class BinaryMachineOp(f: (Double,Double) => Double) extends MachineOp {
 object LoadMachineOp {
   def apply[T](num: Number[T]) = new LoadMachineOp(num)
 }
-final class LoadMachineOp[T](num: Number[T]) extends MachineOp {
-  def step(m: Machine): Int = {
+final class LoadMachineOp[T](num: Number[T]) extends PureMachineOp {
+  def pureStep(m: Machine): Int = {
     import m._
     val pc: Int = exec.pop().toInt
     val addrd: Double = data.pop()
@@ -243,8 +247,8 @@ final class LoadMachineOp[T](num: Number[T]) extends MachineOp {
 object StoreMachineOp {
   def apply[T](num: Number[T]) = new StoreMachineOp(num)
 }
-final class StoreMachineOp[T](num: Number[T]) extends MachineOp {
-  def step(m: Machine): Int = {
+final class StoreMachineOp[T](num: Number[T]) extends PureMachineOp {
+  def pureStep(m: Machine): Int = {
     import m._
     val pc: Int = exec.pop().toInt
     val xd: Double = data.pop()
