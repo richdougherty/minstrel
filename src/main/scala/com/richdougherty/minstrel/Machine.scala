@@ -11,6 +11,7 @@ final class Machine(val mem: Memory) {
   val data = new Stack(mem, DataAddr)
   val inbox = new Mailbox
   val outbox = new Mailbox
+  var state: MachineState = Running
 
   def step(log: Boolean = false): StepResult = {
     if (exec.isEmpty) StepResult(0, Some(IO.Halt)) else {
@@ -29,11 +30,14 @@ final class Machine(val mem: Memory) {
   def run(log: Boolean = false): Int = {
     @tailrec
     def run0(cyclesSoFar: Int): Int = {
+      assert(state == Running)
       val stepResult = step(log)
       val cyclesAfterStep = cyclesSoFar + stepResult.cycles
       stepResult.io match {
         case None => run0(cyclesAfterStep)
-        case Some(IO.Halt) => cyclesAfterStep
+        case Some(IO.Halt) =>
+          state = Halted
+          cyclesAfterStep
         case Some(IO.InSize) =>
           val size = inbox.sizeFirst.getOrElse(0)
           data.push(I32.toDouble(size))
@@ -54,7 +58,8 @@ final class Machine(val mem: Memory) {
           outbox.pushLast(Message(content))
           run0(cyclesAfterStep)
         case Some(IO.InWait) =>
-          ???
+          state = WaitingForInput
+          cyclesAfterStep
       }
     }
     run0(0)
@@ -73,6 +78,11 @@ object Machine {
   val DataAddr = alloc(12)
 
   final case class StepResult(cycles: Int, io: Option[IO])
+
+  sealed trait MachineState
+  case object Running extends MachineState
+  case object WaitingForInput extends MachineState
+  case object Halted extends MachineState
 
   sealed trait IO
   object IO {

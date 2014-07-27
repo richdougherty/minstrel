@@ -23,6 +23,16 @@ class CompilerSpec extends UnitSpec {
   }
 
   "Compiled programs" should {
+    "be halted when the program ends" in {
+      run(Program(
+        Def("main", Num(1))
+      )).state should be (Machine.Halted)
+    }
+    "be halted when halt is called" in {
+      run(Program(
+        Def("main", Word("halt"))
+      )).state should be (Machine.Halted)
+    }
     "add numbers" in {
       result(Program(
         Def("main", Num(1), Num(2), Word("+"))
@@ -92,7 +102,7 @@ class CompilerSpec extends UnitSpec {
     }
     "receive 'hello world'" in {
       val helloWorldBytes = "hello world".getBytes("US-ASCII")
-      val m = result(
+      result(
         program = Program(Def("main", Vector(Ref("space"), Num(0), Num(helloWorldBytes.length), Word("in>"), Ref("space"), Word("u8>")))),
         prepareMachine = { m: Machine =>
           m.inbox.pushFirst(Message(helloWorldBytes))
@@ -101,7 +111,7 @@ class CompilerSpec extends UnitSpec {
     }
     "get the size of a 'hello world' message" in {
       val helloWorldBytes = "hello world".getBytes("US-ASCII")
-      val m = result(
+      result(
         program = Program(Def("main", Vector(Word("in?")))),
         prepareMachine = { m: Machine =>
           m.inbox.pushFirst(Message(helloWorldBytes))
@@ -112,6 +122,11 @@ class CompilerSpec extends UnitSpec {
       result(Program(
         Def("main", Word("in?"))
       )) should be (0d)
+    }
+    "pause when waiting for input 0 input size when input is empty" in {
+      run(Program(
+        Def("main", Word("in..."))
+      )).state should be (Machine.WaitingForInput)
     }
 
   }

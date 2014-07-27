@@ -124,7 +124,11 @@ object MachineOp {
       (1, IO.InSize)
     }
   }
-  val In_Wait = unimplemented("in_wait")
+  object In_Wait extends IoMachineOp {
+    def ioStep(m: Machine) = {
+      (0, IO.InWait)
+    }
+  }
   object In_Read extends IoMachineOp {
     def ioStep(m: Machine) = {
       import m._
